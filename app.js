@@ -5,18 +5,20 @@ var cookieParser = require('cookie-parser');
 var logger = require('morgan');
 require("dotenv").config();
 
-// var indexRouter = require('./routes/index');
+
 var usersRouter = require('./routes/users');
 var trasactionRoutes = require('./routes/transaction');
+// var adminroutes = require('./routes/admin');
 const mongoose = require('mongoose');
-mongoose.connect('mongodb://localhost:27017/Hnewprojec', )
+mongoose.connect('mongodb://localhost:27017/Hnewprojec' )
 .then(()=>{
-  console.log("mongoDB database connect successfuly");
+  console.log("mongoDB database connect successfuly")
   
 })
 .catch((err)=>{
   console.log(err);
 });
+
 
 
 var app = express();
@@ -34,7 +36,7 @@ app.use(express.static(path.join(__dirname, 'public')));
 // app.use('/', indexRouter);
 app.use('/users', usersRouter);
 app.use('/transaction', trasactionRoutes);
-
+// app.use('/admin', adminroutes);
 // catch 404 and forward to error handler
 app.use(function(req, res, next) {
   next(createError(404));

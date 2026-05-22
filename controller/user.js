@@ -1,6 +1,7 @@
 const user = require("../model/user");
 const bcrypt = require("bcrypt");
 const jwt = require("jsonwebtoken");
+const sendMail = require("../utils/sendmail");
 
 exports.register = async (req, res) => {
   try {
@@ -18,6 +19,16 @@ exports.register = async (req, res) => {
     const salt = await bcrypt.genSalt(10);
     passdata.password = await bcrypt.hash(passdata.password, salt);
     const data = await user.create(passdata);
+    await sendMail(
+      passdata.email,
+
+      "Welcome",
+      "Hello " +
+        passdata.name + 
+        " welcome to our bank." +
+        "Your account has been created successfully."+ 
+        "Thank you for choosing us!.,for any query contact us on 1800-123-4567",
+    );
     res.status(200).json({
       success: true,
       message: "User created successfully",
@@ -47,9 +58,38 @@ exports.getusers = async (req, res) => {
     });
   }
 };
+exports.updateProfile = async (req, res) => {
+  try {
+    const updateid = req.params.updateid;
+
+    const updatedata = await user.findByIdAndUpdate(updateid,req.body,{new: true , runValidators: true}).select("-password");
+
+      if(!updatedata){
+      return res.status(404).json({
+      status: "fail",
+      message: "user not found"
+      })
+    }
+
+    res.status(200).json({
+      success: true,
+      message: "Profile updated successfully",
+      data : updatedata,
+
+    });
+  
+}catch (error) {
+    res.status(500).json({
+      success: false,
+      error: error.message,
+    });
+  }
+};
+
 exports.login = async (req, res) => {
   try {
     let passdata = req.body;
+
     const emailVerify = await user.findOne({
       $or: [
         { email: passdata.email },
@@ -57,25 +97,41 @@ exports.login = async (req, res) => {
         { phone: passdata.phone },
       ],
     });
-    if (!emailVerify) throw new Error("invalid name or email");
+
+    if (!emailVerify) throw new Error("Invalid name or email OR phone number");
+
     const passwordVerify = await bcrypt.compare(
       passdata.password,
       emailVerify.password,
     );
-    if (!passwordVerify) throw new Error("invalid password");
-    const token = jwt.sign({ id: emailVerify._id }, process.env.JWT_SECRET, {
-      expiresIn: "1d",
-    });
+
+    if (!passwordVerify) throw new Error("Invalid password");
+
+    if (emailVerify.isBlocked) {
+      throw new Error("Your account has been blocked");
+    }
+
+    const token = jwt.sign(
+      { id: emailVerify._id, role: emailVerify.role },
+      process.env.JWT_SECRET,
+      { expiresIn: "1d" },
+    );
+
     res.status(200).json({
       success: true,
       message: "User logged in successfully",
-      data: emailVerify,
-      token: token,
+      data: {
+        id: emailVerify._id,
+        name: emailVerify.name,
+        email: emailVerify.email,
+        role: emailVerify.role,
+      },
+
+      token,
     });
   } catch (err) {
     res.status(500).json({
       success: false,
-      message: "Error logging in user",
       error: err.message,
     });
   }
@@ -95,6 +151,16 @@ exports.forgotpassword = async (req, res) => {
     userdata.otp = otp;
 
     userdata.otpExpire = Date.now() + 5 * 60 * 1000;
+
+    await userdata.save();
+
+    await sendMail(
+      userdata.email,
+
+      "OTP Verification",
+
+      `Your OTP is ${otp}`,
+    );
 
     await userdata.save();
 
@@ -148,6 +214,10 @@ exports.resetpassword = async (req, res) => {
 
     if (!userdata) {
       throw new Error("user not found");
+    }
+    // 🔥 Password length validation
+    if (req.body.password.length < 8) {
+      throw new Error("Password must be at least 8 characters");
     }
 
     const hashpassword = await bcrypt.hash(req.body.password, 10);

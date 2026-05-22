@@ -5,6 +5,12 @@ const userSchema = new mongoose.Schema({
         required : [true,"Please provide a name"],
         trim : true,
     },
+        accountNo : {
+        type: Number,
+        required: [true, "please enter your account Number"],
+        unique : [true, "Account number already exists"],
+    
+    },
     email: {
         type : String,
         required : [true,"Please provide an email"],
@@ -25,11 +31,18 @@ const userSchema = new mongoose.Schema({
         minlength : [6,"Password must be at least 6 characters"],
 
     },
+    
     otp : {
         type : Number,
     },
     otpExpire : {
-   type : Date
+    type : Date
+    },
+    role : {
+    type : String,
+    enum : ["user","admin"],
+    default : "user"
 }
+
 },{timestamps : true})
 module.exports = mongoose.model("User",userSchema)

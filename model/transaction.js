@@ -6,11 +6,7 @@ const transactionschema = new mongoose.Schema({
         required: [true, "please enter your name"],
         
     },
-    accountNo : {
-        type: Number,
-        required: [true, "please enter your account Number"],
-    
-    },
+
     transaction : {
         type : Number,
         required: [true, "please enter your trancaction"],
