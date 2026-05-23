@@ -8,7 +8,7 @@ router.get('/history/:id',transactionController.history);
 router.get( "/statement",  transactionController.downloadStatement);
 router.post("/transfer",  transactionController.transfer);
 router.post( "/add-beneficiary",transactionController.addBeneficiary);
-// router.get("/receipt/:fileName",authcheck,transactionController.downloadReceipt);
+
 
 
 
