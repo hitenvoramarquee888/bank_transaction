@@ -1,7 +1,7 @@
 const user = require('../model/user')
 const jwt = require('jsonwebtoken')
 
-exports.authcheck = async (req, res, next) => {
+module.exports.authcheck = async (req, res, next) => {
     try {
 
         const token = req.headers.authorization
@@ -27,3 +27,4 @@ exports.authcheck = async (req, res, next) => {
         })
     }
 }
+

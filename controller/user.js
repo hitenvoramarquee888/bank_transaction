@@ -112,7 +112,7 @@ exports.login = async (req, res) => {
     }
 
     const token = jwt.sign(
-      { id: emailVerify._id, role: emailVerify.role },
+      { id: emailVerify._id },
       process.env.JWT_SECRET,
       { expiresIn: "1d" },
     );
@@ -124,7 +124,7 @@ exports.login = async (req, res) => {
         id: emailVerify._id,
         name: emailVerify.name,
         email: emailVerify.email,
-        role: emailVerify.role,
+        phone: emailVerify.phone,
       },
 
       token,
@@ -139,7 +139,7 @@ exports.login = async (req, res) => {
 exports.forgotpassword = async (req, res) => {
   try {
     const userdata = await user.findOne({
-      mobile: req.body.mobile,
+      phone: req.body.phone,
     });
 
     if (!userdata) {
@@ -162,8 +162,6 @@ exports.forgotpassword = async (req, res) => {
       `Your OTP is ${otp}`,
     );
 
-    await userdata.save();
-
     console.log("OTP :", otp);
 
     res.json({
@@ -180,7 +178,7 @@ exports.forgotpassword = async (req, res) => {
 exports.verifyotp = async (req, res) => {
   try {
     const userdata = await user.findOne({
-      mobile: req.body.mobile,
+      phone: req.body.phone,
     });
 
     if (!userdata) {
@@ -209,7 +207,7 @@ exports.verifyotp = async (req, res) => {
 exports.resetpassword = async (req, res) => {
   try {
     const userdata = await user.findOne({
-      mobile: req.body.mobile,
+      phone: req.body.phone,
     });
 
     if (!userdata) {

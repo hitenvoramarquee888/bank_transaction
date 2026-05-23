@@ -3,7 +3,7 @@ var router = express.Router();
 
 const usercontroller = require('../controller/user');
 router.post('/post', usercontroller.register);
-router.get('/get', usercontroller.getusers);
+router.get('/getusers', usercontroller.getusers);
 router.patch('/:updateid', usercontroller.updateProfile);
 router.post('/login', usercontroller.login);
 router.post('/forgotpassword',usercontroller.forgotpassword);

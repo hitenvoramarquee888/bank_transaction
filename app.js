@@ -8,6 +8,7 @@ require("dotenv").config();
 
 var usersRouter = require('./routes/users');
 var trasactionRoutes = require('./routes/transaction');
+var middelewere = require('./middleware/auth');
 // var adminroutes = require('./routes/admin');
 const mongoose = require('mongoose');
 mongoose.connect('mongodb://localhost:27017/Hnewprojec' )
@@ -35,7 +36,7 @@ app.use(express.static(path.join(__dirname, 'public')));
 
 // app.use('/', indexRouter);
 app.use('/users', usersRouter);
-app.use('/transaction', trasactionRoutes);
+app.use('/transaction',middelewere.authcheck, trasactionRoutes);
 // app.use('/admin', adminroutes);
 // catch 404 and forward to error handler
 app.use(function(req, res, next) {
