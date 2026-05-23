@@ -16,6 +16,31 @@ exports.register = async (req, res) => {
         message: "Password must be at least 8 characters",
       });
     }
+       if (!/[A-Z]/.test(password)) {
+      return res.status(400).json({
+        status: "fail",
+        message: "Password must contain uppercase letter"
+      });
+    }
+    if (!/[a-z]/.test(password)) {
+      return res.status(400).json({
+        status: "fail",
+        message: "Password must contain lowercase letter"
+      });
+    }
+    if (!/[0-9]/.test(password)) {
+      return res.status(400).json({
+        status: "fail",
+        message: "Password must contain a number"
+      });
+    }
+    if (!/[!@#$%^&*]/.test(password)) {
+      return res.status(400).json({
+        status: "fail",
+        message: "Password must contain a special character"
+      });
+    }
+
     const salt = await bcrypt.genSalt(10);
     passdata.password = await bcrypt.hash(passdata.password, salt);
     const data = await user.create(passdata);
@@ -217,6 +242,19 @@ exports.resetpassword = async (req, res) => {
     if (req.body.password.length < 8) {
       throw new Error("Password must be at least 8 characters");
     }
+    if (!/[A-Z]/.test(req.body.password)) {
+      throw new Error("Password must contain uppercase letter");
+    }
+    if (!/[a-z]/.test(req.body.password)) {
+      throw new Error("Password must contain lowercase letter");
+    }
+    if (!/[0-9]/.test(req.body.password)) {
+      throw new Error("Password must contain a number");
+    }
+    if (!/[!@#$%^&*]/.test(req.body.password)) {
+      throw new Error("Password must contain a special character");
+    }
+    
 
     const hashpassword = await bcrypt.hash(req.body.password, 10);
 
