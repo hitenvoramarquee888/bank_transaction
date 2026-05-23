@@ -87,26 +87,76 @@ exports.updateProfile = async (req, res) => {
   try {
     const updateid = req.params.updateid;
 
-    const updatedata = await user.findByIdAndUpdate(updateid,req.body,{new: true , runValidators: true}).select("-password");
+    // password update thay to j validation chalavo
+    if (req.body.password) {
 
-      if(!updatedata){
+      const password = req.body.password;
+
+      if (password.length < 8) {
+        return res.status(400).json({
+          status: "fail",
+          message: "Password must be at least 8 characters"
+        });
+      }
+
+      if (!/[A-Z]/.test(password)) {
+        return res.status(400).json({
+          status: "fail",
+          message: "Password must contain uppercase letter"
+        });
+      }
+
+      if (!/[a-z]/.test(password)) {
+        return res.status(400).json({
+          status: "fail",
+          message: "Password must contain lowercase letter"
+        });
+      }
+
+      if (!/[0-9]/.test(password)) {
+        return res.status(400).json({
+          status: "fail",
+          message: "Password must contain a number"
+        });
+      }
+
+      if (!/[!@#$%^&*]/.test(password)) {
+        return res.status(400).json({
+          status: "fail",
+          message: "Password must contain special character"
+        });
+      }
+
+      // password hash karo
+      const salt = await bcrypt.genSalt(10);
+      req.body.password = await bcrypt.hash(password, salt);
+    }
+
+    const updatedata = await user
+      .findByIdAndUpdate(
+        updateid,
+        req.body,
+        { new: true, runValidators: true }
+      )
+      .select("-password");
+
+    if (!updatedata) {
       return res.status(404).json({
-      status: "fail",
-      message: "user not found"
-      })
+        status: "fail",
+        message: "User not found"
+      });
     }
 
     res.status(200).json({
       success: true,
       message: "Profile updated successfully",
-      data : updatedata,
-
+      data: updatedata
     });
-  
-}catch (error) {
+
+  } catch (error) {
     res.status(500).json({
       success: false,
-      error: error.message,
+      error: error.message
     });
   }
 };
@@ -254,7 +304,7 @@ exports.resetpassword = async (req, res) => {
     if (!/[!@#$%^&*]/.test(req.body.password)) {
       throw new Error("Password must contain a special character");
     }
-    
+
 
     const hashpassword = await bcrypt.hash(req.body.password, 10);
 
