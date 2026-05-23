@@ -173,7 +173,7 @@ exports.login = async (req, res) => {
       ],
     });
 
-    if (!emailVerify) throw new Error("Invalid name or email OR phone number");
+    if (!emailVerify) throw new Error("Invalid name or email or phone number");
 
     const passwordVerify = await bcrypt.compare(
       passdata.password,

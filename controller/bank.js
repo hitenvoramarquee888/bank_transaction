@@ -187,47 +187,31 @@ exports.history = async (req, res) => {
     const skip = (page - 1) * limit;
 
     // 🔥 Paginated history
-    const result = await transaction.aggregate([
-      {
-        $match: {
-          account_Holdername: new mongoose.Types.ObjectId(userid),
+const result = await transaction.aggregate([
+  {
+    $match: {
+      account_Holdername: new mongoose.Types.ObjectId(userid),
+    },
+  },
+  {
+    $facet: {
+      transactions: [
+        { $sort: { createdAt: -1 } },
+        { $skip: skip },
+        { $limit: limit },
+        {
+          $lookup: {
+            from: "users",
+            localField: "account_Holdername",
+            foreignField: "_id",
+            as: "account_Holdername",
+          },
         },
-      },
-
-      {
-        $facet: {
-          transactions: [
-            {
-              $sort: {
-                createdAt: -1,
-              },
-            },
-
-            {
-              $skip: skip,
-            },
-
-            {
-              $limit: limit,
-            },
-            {
-              $lookup: {
-                from: "users", // MongoDB collection name
-                localField: "account_Holdername",
-                foreignField: "_id",
-                as: "account_Holdername",
-              },
-            },
-          ],
-
-          totalCount: [
-            {
-              $count: "count",
-            },
-          ],
-        },
-      },
-    ]);
+      ],
+      totalCount: [{ $count: "count" }],
+    },
+  },
+]);
 
     const data = result[0].transactions;
 
@@ -235,61 +219,26 @@ exports.history = async (req, res) => {
 
     // 🔥 Balance calculate
     const balanceData = await transaction.aggregate([
-      {
-        $match: {
-          account_Holdername: new mongoose.Types.ObjectId(userid),
-        },
-      },
-      {
-        $facet: {
-          transactions: [
-            {
-              $sort: {
-                createdAt: -1,
-              },
-            },
-
-            {
-              $skip: skip,
-            },
-
-            {
-              $limit: limit,
-            },
-            {
-              $lookup: {
-                from: "users", // MongoDB collection name
-                localField: "account_Holdername",
-                foreignField: "_id",
-                as: "account_Holdername",
-              },
-            },
-          ],
-
-          totalCount: [
-            {
-              $count: "count",
-            },
+  {
+    $match: {
+      account_Holdername: new mongoose.Types.ObjectId(userid),
+    },
+  },
+  {
+    $group: {
+      _id: null,
+      totalBalance: {
+        $sum: {
+          $cond: [
+            { $eq: ["$method", "credit"] },
+            "$transaction",
+            { $multiply: ["$transaction", -1] },
           ],
         },
       },
-      {
-        $group: {
-          _id: null,
-          totalBalance: {
-            $sum: {
-              $cond: [
-                { $eq: ["$method", "credit"] },
-                "$transaction",
-                {
-                  $multiply: ["$transaction", -1],
-                },
-              ],
-            },
-          },
-        },
-      },
-    ]);
+    },
+  },
+]);
 
     const totalBalance =
       balanceData.length > 0 ? balanceData[0].totalBalance : 0;

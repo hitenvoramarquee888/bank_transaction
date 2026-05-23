@@ -2,7 +2,7 @@ var express = require('express');
 var router = express.Router();
 // const { authcheck } = require('../middleware/auth');
 const transactionController = require('../controller/bank');
-router.post('/post', transactionController.transaction);
+router.post('/transaction', transactionController.transaction);
 router.get('/alldata', transactionController.alldata)
 router.get('/history/:id',transactionController.history);
 router.get( "/statement",  transactionController.downloadStatement);
