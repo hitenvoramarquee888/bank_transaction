@@ -1,0 +1,1118 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1.0" />
+<title>NovaPay — Banking Portal</title>
+<link href="https://fonts.googleapis.com/css2?family=Playfair+Display:wght@400;600;700&family=DM+Sans:wght@300;400;500;600&family=DM+Mono:wght@400;500&display=swap" rel="stylesheet" />
+<style>
+  :root {
+    --bg: #0b0d14;
+    --surface: #131620;
+    --surface2: #1a1e2e;
+    --border: #252a3d;
+    --gold: #c9a84c;
+    --gold-light: #e8c96e;
+    --gold-dim: rgba(201,168,76,0.15);
+    --text: #e8eaf2;
+    --text-dim: #7d849e;
+    --text-muted: #4a5068;
+    --green: #3dd68c;
+    --red: #f06060;
+    --blue: #5b9cf6;
+    --radius: 12px;
+    --radius-lg: 18px;
+  }
+  *,*::before,*::after{box-sizing:border-box;margin:0;padding:0}
+  body{font-family:'DM Sans',sans-serif;background:var(--bg);color:var(--text);min-height:100vh;overflow-x:hidden}
+  body::before{content:'';position:fixed;inset:0;background:radial-gradient(ellipse 60% 40% at 80% 10%,rgba(201,168,76,0.06) 0%,transparent 60%),radial-gradient(ellipse 50% 50% at 10% 80%,rgba(91,156,246,0.04) 0%,transparent 60%);pointer-events:none;z-index:0}
+
+  /* ---- LAYOUT ---- */
+  #app{display:flex;min-height:100vh;position:relative;z-index:1}
+  .sidebar{width:240px;background:var(--surface);border-right:1px solid var(--border);display:flex;flex-direction:column;padding:28px 0;position:fixed;top:0;left:0;height:100vh;z-index:100;transition:transform .3s ease}
+  .logo{padding:0 24px 32px;display:flex;align-items:center;gap:10px}
+  .logo-mark{width:36px;height:36px;background:linear-gradient(135deg,var(--gold),#8b6914);border-radius:8px;display:flex;align-items:center;justify-content:center;font-family:'Playfair Display',serif;font-weight:700;font-size:18px;color:#0b0d14}
+  .logo-text{font-family:'Playfair Display',serif;font-size:20px;font-weight:600;color:var(--gold);letter-spacing:.5px}
+  nav{flex:1;padding:0 12px}
+  .nav-section{font-size:10px;font-weight:600;text-transform:uppercase;letter-spacing:1.5px;color:var(--text-muted);padding:8px 12px 4px;margin-top:16px}
+  .nav-item{display:flex;align-items:center;gap:12px;padding:11px 14px;border-radius:10px;cursor:pointer;transition:all .2s;color:var(--text-dim);font-size:14px;font-weight:500;margin-bottom:2px;border:1px solid transparent;user-select:none}
+  .nav-item:hover{background:var(--surface2);color:var(--text)}
+  .nav-item.active{background:var(--gold-dim);color:var(--gold);border-color:rgba(201,168,76,.25)}
+  .nav-item svg{width:18px;height:18px;flex-shrink:0}
+  .sidebar-footer{padding:16px 16px 0;border-top:1px solid var(--border);margin:0 12px}
+  .user-chip{display:flex;align-items:center;gap:10px;padding:12px}
+  .avatar{width:34px;height:34px;border-radius:50%;background:linear-gradient(135deg,var(--gold),#5b3d00);display:flex;align-items:center;justify-content:center;font-weight:600;font-size:13px;color:#0b0d14;flex-shrink:0}
+  .user-info{flex:1;min-width:0}
+  .user-name{font-size:13px;font-weight:600;color:var(--text);white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+  .user-role{font-size:11px;color:var(--text-muted)}
+
+  .main{margin-left:240px;flex:1;padding:32px 36px;min-height:100vh}
+  .page{display:none;animation:fadeUp .35s ease}
+  .page.active{display:block}
+  @keyframes fadeUp{from{opacity:0;transform:translateY(16px)}to{opacity:1;transform:translateY(0)}}
+
+  /* ---- HEADER ---- */
+  .page-header{margin-bottom:32px}
+  .page-title{font-family:'Playfair Display',serif;font-size:28px;font-weight:600;color:var(--text);line-height:1.2}
+  .page-sub{font-size:14px;color:var(--text-dim);margin-top:4px}
+  .page-actions{display:flex;gap:10px;margin-top:18px;align-items:center}
+
+  /* ---- CARDS ---- */
+  .card{background:var(--surface);border:1px solid var(--border);border-radius:var(--radius-lg);padding:24px}
+  .card-sm{padding:18px 20px}
+  .stats-grid{display:grid;grid-template-columns:repeat(auto-fit,minmax(200px,1fr));gap:16px;margin-bottom:28px}
+  .stat-card{background:var(--surface);border:1px solid var(--border);border-radius:var(--radius-lg);padding:22px;position:relative;overflow:hidden;transition:transform .2s,border-color .2s}
+  .stat-card:hover{transform:translateY(-2px);border-color:rgba(201,168,76,.3)}
+  .stat-card::before{content:'';position:absolute;top:0;left:0;right:0;height:3px}
+  .stat-card.gold::before{background:linear-gradient(90deg,var(--gold),var(--gold-light))}
+  .stat-card.green::before{background:linear-gradient(90deg,var(--green),#5bf0b0)}
+  .stat-card.red::before{background:linear-gradient(90deg,var(--red),#f09060)}
+  .stat-card.blue::before{background:linear-gradient(90deg,var(--blue),#8ab8ff)}
+  .stat-label{font-size:12px;font-weight:500;color:var(--text-muted);text-transform:uppercase;letter-spacing:.8px}
+  .stat-value{font-family:'DM Mono',monospace;font-size:26px;font-weight:500;color:var(--text);margin-top:8px;line-height:1}
+  .stat-sub{font-size:12px;color:var(--text-dim);margin-top:6px}
+
+  /* ---- BANK CARD ---- */
+  .bank-card{background:linear-gradient(135deg,#1a1e2e 0%,#0f1220 50%,#1c1a10 100%);border:1px solid rgba(201,168,76,.3);border-radius:20px;padding:28px;position:relative;overflow:hidden;max-width:380px;margin-bottom:28px}
+  .bank-card::after{content:'';position:absolute;top:-50px;right:-50px;width:200px;height:200px;border-radius:50%;background:radial-gradient(circle,rgba(201,168,76,.12),transparent 70%)}
+  .bank-card-chip{width:38px;height:28px;background:linear-gradient(135deg,var(--gold),#7a5a10);border-radius:5px;margin-bottom:24px;position:relative;z-index:1}
+  .bank-card-number{font-family:'DM Mono',monospace;font-size:17px;letter-spacing:3px;color:rgba(232,234,242,.8);margin-bottom:20px;position:relative;z-index:1}
+  .bank-card-row{display:flex;justify-content:space-between;align-items:flex-end;position:relative;z-index:1}
+  .bank-card-label{font-size:10px;text-transform:uppercase;letter-spacing:1px;color:var(--text-muted)}
+  .bank-card-val{font-size:15px;font-weight:500;color:var(--text);margin-top:2px}
+  .bank-card-balance{font-family:'DM Mono',monospace;font-size:22px;font-weight:500;color:var(--gold)}
+
+  /* ---- FORMS ---- */
+  .form-grid{display:grid;grid-template-columns:1fr 1fr;gap:16px}
+  .form-group{display:flex;flex-direction:column;gap:6px}
+  .form-group.full{grid-column:1/-1}
+  label{font-size:12px;font-weight:600;text-transform:uppercase;letter-spacing:.8px;color:var(--text-muted)}
+  input,select,textarea{background:var(--surface2);border:1px solid var(--border);border-radius:8px;padding:12px 14px;font-family:'DM Sans',sans-serif;font-size:14px;color:var(--text);outline:none;transition:border-color .2s,box-shadow .2s;width:100%}
+  input:focus,select:focus,textarea:focus{border-color:var(--gold);box-shadow:0 0 0 3px rgba(201,168,76,.1)}
+  input::placeholder,textarea::placeholder{color:var(--text-muted)}
+  select option{background:var(--surface2)}
+  .radio-group{display:flex;gap:10px}
+  .radio-opt{flex:1;display:flex;align-items:center;justify-content:center;gap:8px;padding:11px;border:1px solid var(--border);border-radius:8px;cursor:pointer;font-size:13px;font-weight:500;color:var(--text-dim);transition:all .2s;user-select:none}
+  .radio-opt:hover{border-color:var(--gold);color:var(--text)}
+  .radio-opt.selected{border-color:var(--gold);background:var(--gold-dim);color:var(--gold)}
+  .radio-opt.selected.debit{border-color:var(--red);background:rgba(240,96,96,.1);color:var(--red)}
+
+  /* ---- BUTTONS ---- */
+  .btn{padding:11px 22px;border-radius:9px;font-family:'DM Sans',sans-serif;font-size:14px;font-weight:600;cursor:pointer;border:none;transition:all .2s;display:inline-flex;align-items:center;gap:8px;white-space:nowrap}
+  .btn-primary{background:linear-gradient(135deg,var(--gold),#8b6914);color:#0b0d14}
+  .btn-primary:hover{filter:brightness(1.1);transform:translateY(-1px)}
+  .btn-outline{background:transparent;border:1px solid var(--border);color:var(--text-dim)}
+  .btn-outline:hover{border-color:var(--gold);color:var(--gold)}
+  .btn-danger{background:rgba(240,96,96,.12);border:1px solid rgba(240,96,96,.3);color:var(--red)}
+  .btn-sm{padding:7px 14px;font-size:12px}
+
+  /* ---- TABLE ---- */
+  .table-wrap{overflow-x:auto;margin-top:4px}
+  table{width:100%;border-collapse:collapse}
+  th{font-size:11px;font-weight:600;text-transform:uppercase;letter-spacing:.8px;color:var(--text-muted);padding:10px 14px;text-align:left;border-bottom:1px solid var(--border);white-space:nowrap}
+  td{padding:14px 14px;font-size:14px;border-bottom:1px solid rgba(37,42,61,.6);vertical-align:middle}
+  tr:hover td{background:rgba(201,168,76,.03)}
+  tr:last-child td{border-bottom:none}
+  .badge{display:inline-flex;align-items:center;gap:5px;padding:4px 10px;border-radius:20px;font-size:12px;font-weight:600}
+  .badge-credit{background:rgba(61,214,140,.12);color:var(--green)}
+  .badge-debit{background:rgba(240,96,96,.12);color:var(--red)}
+  .amount{font-family:'DM Mono',monospace;font-size:14px;font-weight:500}
+  .amount-credit{color:var(--green)}
+  .amount-debit{color:var(--red)}
+
+  /* ---- TOAST ---- */
+  #toast{position:fixed;bottom:28px;right:28px;z-index:9999;display:flex;flex-direction:column;gap:8px}
+  .toast-msg{background:var(--surface2);border:1px solid var(--border);border-radius:10px;padding:14px 18px;font-size:13px;min-width:260px;display:flex;align-items:center;gap:10px;animation:slideIn .3s ease;border-left:3px solid var(--gold)}
+  .toast-msg.error{border-left-color:var(--red)}
+  .toast-msg.success{border-left-color:var(--green)}
+  @keyframes slideIn{from{opacity:0;transform:translateX(20px)}to{opacity:1;transform:translateX(0)}}
+
+  /* ---- AUTH ---- */
+  #auth-screen{position:fixed;inset:0;background:var(--bg);z-index:200;display:flex;align-items:center;justify-content:center}
+  #auth-screen::before{content:'';position:absolute;inset:0;background:radial-gradient(ellipse 70% 70% at 50% 50%,rgba(201,168,76,.04),transparent 70%)}
+  .auth-box{background:var(--surface);border:1px solid var(--border);border-radius:var(--radius-lg);padding:44px 44px;width:440px;max-width:95vw;position:relative;z-index:1}
+  .auth-logo{display:flex;align-items:center;gap:12px;justify-content:center;margin-bottom:32px}
+  .auth-title{font-family:'Playfair Display',serif;font-size:22px;font-weight:600;text-align:center;margin-bottom:6px}
+  .auth-sub{font-size:13px;color:var(--text-dim);text-align:center;margin-bottom:28px}
+  .auth-tab{display:flex;gap:0;background:var(--surface2);border-radius:9px;padding:3px;margin-bottom:24px}
+  .auth-tab-btn{flex:1;padding:9px;border-radius:7px;border:none;background:transparent;font-family:'DM Sans',sans-serif;font-size:13px;font-weight:600;color:var(--text-dim);cursor:pointer;transition:all .2s}
+  .auth-tab-btn.active{background:var(--surface);color:var(--gold);box-shadow:0 2px 8px rgba(0,0,0,.3)}
+  .auth-form{display:none}
+  .auth-form.active{display:flex;flex-direction:column;gap:14px}
+  .forgot-link{font-size:12px;color:var(--gold);cursor:pointer;text-align:right;margin-top:-6px;text-decoration:underline}
+
+  /* ---- PAGINATION ---- */
+  .pagination{display:flex;align-items:center;gap:8px;margin-top:20px;justify-content:flex-end}
+  .page-btn{width:32px;height:32px;border-radius:7px;border:1px solid var(--border);background:var(--surface2);color:var(--text-dim);font-size:13px;cursor:pointer;display:flex;align-items:center;justify-content:center;transition:all .2s;font-family:'DM Sans',sans-serif}
+  .page-btn:hover,.page-btn.active{border-color:var(--gold);color:var(--gold);background:var(--gold-dim)}
+  .page-info{font-size:12px;color:var(--text-muted);padding:0 8px}
+
+  /* ---- DIVIDER ---- */
+  .divider{height:1px;background:var(--border);margin:24px 0}
+
+  /* ---- SECTION HEADER ---- */
+  .section-head{display:flex;align-items:center;justify-content:space-between;margin-bottom:18px}
+  .section-title{font-size:16px;font-weight:600;color:var(--text)}
+
+  /* ---- MODAL ---- */
+  .modal-bg{position:fixed;inset:0;background:rgba(0,0,0,.7);z-index:500;display:none;align-items:center;justify-content:center}
+  .modal-bg.open{display:flex}
+  .modal{background:var(--surface);border:1px solid var(--border);border-radius:var(--radius-lg);padding:32px;width:460px;max-width:95vw;position:relative;animation:fadeUp .3s ease}
+  .modal-title{font-family:'Playfair Display',serif;font-size:20px;font-weight:600;margin-bottom:20px}
+  .modal-close{position:absolute;top:16px;right:16px;background:none;border:none;color:var(--text-muted);cursor:pointer;font-size:20px;line-height:1;padding:4px;border-radius:6px;transition:color .2s}
+  .modal-close:hover{color:var(--text)}
+
+  /* ---- STEP INDICATOR ---- */
+  .steps{display:flex;gap:0;margin-bottom:24px;border-radius:8px;overflow:hidden;border:1px solid var(--border)}
+  .step{flex:1;padding:10px;text-align:center;font-size:12px;font-weight:600;color:var(--text-muted);background:var(--surface2);transition:all .2s;border-right:1px solid var(--border)}
+  .step:last-child{border-right:none}
+  .step.active{background:var(--gold-dim);color:var(--gold)}
+  .step.done{background:rgba(61,214,140,.08);color:var(--green)}
+
+  /* ---- EMPTY STATE ---- */
+  .empty{text-align:center;padding:52px 24px;color:var(--text-muted)}
+  .empty svg{width:48px;height:48px;opacity:.3;margin-bottom:12px}
+  .empty p{font-size:14px}
+
+  /* ---- LOADING ---- */
+  .spinner{display:inline-block;width:18px;height:18px;border:2px solid rgba(201,168,76,.3);border-top-color:var(--gold);border-radius:50%;animation:spin .7s linear infinite}
+  @keyframes spin{to{transform:rotate(360deg)}}
+  .loading-overlay{display:flex;align-items:center;justify-content:center;padding:40px;gap:12px;color:var(--text-dim);font-size:14px}
+
+  /* ---- BENEFICIARY ---- */
+  .beneficiary-list{display:flex;flex-direction:column;gap:10px;margin-top:14px}
+  .beneficiary-item{display:flex;align-items:center;gap:14px;padding:14px 16px;background:var(--surface2);border:1px solid var(--border);border-radius:10px;cursor:pointer;transition:all .2s}
+  .beneficiary-item:hover{border-color:var(--gold);background:var(--gold-dim)}
+  .beneficiary-item .avatar{background:linear-gradient(135deg,var(--blue),#2560cc)}
+  .ben-info{flex:1}
+  .ben-name{font-size:14px;font-weight:600}
+  .ben-acc{font-size:12px;color:var(--text-muted);font-family:'DM Mono',monospace}
+  .select-ben-btn{font-size:12px;color:var(--gold);font-weight:600}
+
+  /* ---- PROFILE ---- */
+  .profile-section{display:grid;grid-template-columns:1fr 1fr;gap:24px}
+  .profile-card{background:var(--surface);border:1px solid var(--border);border-radius:var(--radius-lg);padding:28px}
+  .profile-header{display:flex;align-items:center;gap:16px;margin-bottom:24px}
+  .profile-avatar{width:60px;height:60px;border-radius:50%;background:linear-gradient(135deg,var(--gold),#5b3d00);display:flex;align-items:center;justify-content:center;font-weight:700;font-size:22px;color:#0b0d14}
+  .profile-name{font-family:'Playfair Display',serif;font-size:20px;font-weight:600}
+  .profile-email{font-size:13px;color:var(--text-dim);margin-top:2px}
+  .detail-row{display:flex;justify-content:space-between;align-items:center;padding:11px 0;border-bottom:1px solid var(--border)}
+  .detail-row:last-child{border-bottom:none}
+  .detail-key{font-size:12px;color:var(--text-muted);font-weight:500}
+  .detail-val{font-size:13px;font-weight:500;font-family:'DM Mono',monospace}
+
+  /* ---- TRANSFER TOGGLE ---- */
+  .transfer-toggle{display:flex;gap:0;background:var(--surface2);border-radius:9px;padding:3px;margin-bottom:20px}
+  .transfer-toggle-btn{flex:1;padding:9px;border-radius:7px;border:none;background:transparent;font-family:'DM Sans',sans-serif;font-size:13px;font-weight:600;color:var(--text-dim);cursor:pointer;transition:all .2s}
+  .transfer-toggle-btn.active{background:var(--surface);color:var(--gold);box-shadow:0 2px 8px rgba(0,0,0,.3)}
+
+  @media(max-width:900px){
+    .sidebar{transform:translateX(-100%)}
+    .sidebar.open{transform:translateX(0)}
+    .main{margin-left:0;padding:20px}
+    .form-grid{grid-template-columns:1fr}
+    .profile-section{grid-template-columns:1fr}
+    .stats-grid{grid-template-columns:1fr 1fr}
+  }
+</style>
+</head>
+<body>
+
+<!-- AUTH SCREEN -->
+<div id="auth-screen">
+  <div class="auth-box">
+    <div class="auth-logo">
+      <div class="logo-mark">N</div>
+      <span style="font-family:'Playfair Display',serif;font-size:24px;font-weight:600;color:var(--gold)">NovaPay</span>
+    </div>
+    <div class="auth-title">Welcome Back</div>
+    <div class="auth-sub">Sign in to your banking portal</div>
+    <div class="auth-tab">
+      <button class="auth-tab-btn active" onclick="switchAuth('login')">Sign In</button>
+      <button class="auth-tab-btn" onclick="switchAuth('register')">Register</button>
+      <button class="auth-tab-btn" onclick="switchAuth('forgot')">Forgot</button>
+    </div>
+
+    <!-- LOGIN -->
+    <form class="auth-form active" id="login-form" onsubmit="doLogin(event)">
+      <div class="form-group">
+        <label>Email or Phone</label>
+        <input type="text" id="login-email" placeholder="email@example.com" required />
+      </div>
+      <div class="form-group">
+        <label>Password</label>
+        <input type="password" id="login-pass" placeholder="••••••••" required />
+        <div class="forgot-link" onclick="switchAuth('forgot')">Forgot password?</div>
+      </div>
+      <button class="btn btn-primary" type="submit" style="margin-top:4px;justify-content:center">Sign In</button>
+      <div style="font-size:12px;color:var(--text-muted);text-align:center">Demo: use any credentials — connect to your backend API</div>
+    </form>
+
+    <!-- REGISTER -->
+    <form class="auth-form" id="register-form" onsubmit="doRegister(event)">
+      <div class="form-grid" style="grid-template-columns:1fr 1fr">
+        <div class="form-group">
+          <label>Full Name</label>
+          <input type="text" id="reg-name" placeholder="John Doe" required />
+        </div>
+        <div class="form-group">
+          <label>Account No</label>
+          <input type="number" id="reg-acc" placeholder="1234567890" required />
+        </div>
+        <div class="form-group">
+          <label>Email</label>
+          <input type="email" id="reg-email" placeholder="john@email.com" required />
+        </div>
+        <div class="form-group">
+          <label>Phone</label>
+          <input type="number" id="reg-phone" placeholder="9876543210" required />
+        </div>
+        <div class="form-group full">
+          <label>Password</label>
+          <input type="password" id="reg-pass" placeholder="Min 8 chars, upper/lower/num/special" required />
+        </div>
+      </div>
+      <button class="btn btn-primary" type="submit" style="justify-content:center">Create Account</button>
+    </form>
+
+    <!-- FORGOT -->
+    <div class="auth-form" id="forgot-form">
+      <div id="forgot-step1">
+        <div class="steps">
+          <div class="step active">1. Phone</div>
+          <div class="step" id="s2">2. OTP</div>
+          <div class="step" id="s3">3. Reset</div>
+        </div>
+        <div class="form-group">
+          <label>Registered Phone</label>
+          <input type="number" id="fp-phone" placeholder="9876543210" />
+        </div>
+        <button class="btn btn-primary" style="width:100%;justify-content:center;margin-top:6px" onclick="sendOtp()">Send OTP</button>
+      </div>
+      <div id="forgot-step2" style="display:none">
+        <div class="steps"><div class="step done">1. Phone</div><div class="step active">2. OTP</div><div class="step" id="s3b">3. Reset</div></div>
+        <div class="form-group">
+          <label>Enter OTP</label>
+          <input type="number" id="fp-otp" placeholder="4-digit OTP" />
+        </div>
+        <button class="btn btn-primary" style="width:100%;justify-content:center;margin-top:6px" onclick="verifyOtp()">Verify OTP</button>
+      </div>
+      <div id="forgot-step3" style="display:none">
+        <div class="steps"><div class="step done">1. Phone</div><div class="step done">2. OTP</div><div class="step active">3. Reset</div></div>
+        <div class="form-group">
+          <label>New Password</label>
+          <input type="password" id="fp-newpass" placeholder="New secure password" />
+        </div>
+        <button class="btn btn-primary" style="width:100%;justify-content:center;margin-top:6px" onclick="resetPass()">Reset Password</button>
+      </div>
+    </div>
+  </div>
+</div>
+
+<!-- MAIN APP -->
+<div id="app" style="display:none">
+  <aside class="sidebar" id="sidebar">
+    <div class="logo">
+      <div class="logo-mark">N</div>
+      <span class="logo-text">NovaPay</span>
+    </div>
+    <nav>
+      <div class="nav-section">Overview</div>
+      <div class="nav-item active" onclick="gotoPage('dashboard')">
+        <svg fill="none" viewBox="0 0 24 24" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="1.8" d="M3 12l2-2m0 0l7-7 7 7M5 10v10a1 1 0 001 1h3m10-11l2 2m-2-2v10a1 1 0 01-1 1h-3m-6 0a1 1 0 001-1v-4a1 1 0 011-1h2a1 1 0 011 1v4a1 1 0 001 1m-6 0h6"/></svg>
+        Dashboard
+      </div>
+      <div class="nav-section">Transactions</div>
+      <div class="nav-item" onclick="gotoPage('transaction')">
+        <svg fill="none" viewBox="0 0 24 24" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="1.8" d="M12 6v6m0 0v6m0-6h6m-6 0H6"/></svg>
+        New Transaction
+      </div>
+      <div class="nav-item" onclick="gotoPage('transfer')">
+        <svg fill="none" viewBox="0 0 24 24" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="1.8" d="M8 7h12m0 0l-4-4m4 4l-4 4m0 6H4m0 0l4 4m-4-4l4-4"/></svg>
+        Transfer
+      </div>
+      <div class="nav-item" onclick="gotoPage('history')">
+        <svg fill="none" viewBox="0 0 24 24" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="1.8" d="M9 5H7a2 2 0 00-2 2v12a2 2 0 002 2h10a2 2 0 002-2V7a2 2 0 00-2-2h-2M9 5a2 2 0 002 2h2a2 2 0 002-2M9 5a2 2 0 012-2h2a2 2 0 012 2"/></svg>
+        History
+      </div>
+      <div class="nav-section">Account</div>
+      <div class="nav-item" onclick="gotoPage('beneficiaries')">
+        <svg fill="none" viewBox="0 0 24 24" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="1.8" d="M17 20h5v-2a3 3 0 00-5.356-1.857M17 20H7m10 0v-2c0-.656-.126-1.283-.356-1.857M7 20H2v-2a3 3 0 015.356-1.857M7 20v-2c0-.656.126-1.283.356-1.857m0 0a5.002 5.002 0 019.288 0M15 7a3 3 0 11-6 0 3 3 0 016 0z"/></svg>
+        Beneficiaries
+      </div>
+      <div class="nav-item" onclick="gotoPage('profile')">
+        <svg fill="none" viewBox="0 0 24 24" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="1.8" d="M16 7a4 4 0 11-8 0 4 4 0 018 0zM12 14a7 7 0 00-7 7h14a7 7 0 00-7-7z"/></svg>
+        Profile
+      </div>
+    </nav>
+    <div class="sidebar-footer">
+      <div class="user-chip">
+        <div class="avatar" id="sidebar-avatar">J</div>
+        <div class="user-info">
+          <div class="user-name" id="sidebar-name">Loading...</div>
+          <div class="user-role" id="sidebar-role">user</div>
+        </div>
+      </div>
+      <button class="btn btn-outline btn-sm" style="width:100%;justify-content:center;margin-top:8px" onclick="logout()">Sign Out</button>
+    </div>
+  </aside>
+
+  <main class="main">
+
+    <!-- DASHBOARD -->
+    <div class="page active" id="page-dashboard">
+      <div class="page-header">
+        <div class="page-title">Dashboard</div>
+        <div class="page-sub" id="dash-date">Good morning — here's your overview</div>
+      </div>
+      <div class="stats-grid">
+        <div class="stat-card gold">
+          <div class="stat-label">Current Balance</div>
+          <div class="stat-value" id="stat-balance">₹0</div>
+          <div class="stat-sub">Available funds</div>
+        </div>
+        <div class="stat-card green">
+          <div class="stat-label">Total Credits</div>
+          <div class="stat-value" id="stat-credits">₹0</div>
+          <div class="stat-sub">All-time received</div>
+        </div>
+        <div class="stat-card red">
+          <div class="stat-label">Total Debits</div>
+          <div class="stat-value" id="stat-debits">₹0</div>
+          <div class="stat-sub">All-time spent</div>
+        </div>
+        <div class="stat-card blue">
+          <div class="stat-label">Transactions</div>
+          <div class="stat-value" id="stat-count">0</div>
+          <div class="stat-sub">Total count</div>
+        </div>
+      </div>
+      <div style="display:grid;grid-template-columns:1fr 1.4fr;gap:20px">
+        <div>
+          <div class="bank-card">
+            <div class="bank-card-chip"></div>
+            <div class="bank-card-number" id="card-number">**** **** **** 0000</div>
+            <div class="bank-card-row">
+              <div>
+                <div class="bank-card-label">Card Holder</div>
+                <div class="bank-card-val" id="card-name">—</div>
+              </div>
+              <div style="text-align:right">
+                <div class="bank-card-label">Balance</div>
+                <div class="bank-card-balance" id="card-balance">₹0</div>
+              </div>
+            </div>
+          </div>
+          <div class="card card-sm" style="margin-top:0">
+            <div class="section-title" style="margin-bottom:14px;font-size:14px">Quick Actions</div>
+            <div style="display:grid;grid-template-columns:1fr 1fr;gap:10px">
+              <button class="btn btn-primary btn-sm" onclick="gotoPage('transaction')" style="justify-content:center">+ Transaction</button>
+              <button class="btn btn-outline btn-sm" onclick="gotoPage('transfer')" style="justify-content:center">Transfer</button>
+              <button class="btn btn-outline btn-sm" onclick="downloadStatement()" style="justify-content:center">Download CSV</button>
+              <button class="btn btn-outline btn-sm" onclick="gotoPage('history')" style="justify-content:center">View History</button>
+            </div>
+          </div>
+        </div>
+        <div class="card">
+          <div class="section-head">
+            <div class="section-title">Recent Transactions</div>
+            <button class="btn btn-outline btn-sm" onclick="gotoPage('history')">View All</button>
+          </div>
+          <div class="table-wrap">
+            <table>
+              <thead>
+                <tr>
+                  <th>Date</th>
+                  <th>Type</th>
+                  <th>Amount</th>
+                </tr>
+              </thead>
+              <tbody id="recent-tbody">
+                <tr><td colspan="3"><div class="loading-overlay"><div class="spinner"></div> Loading...</div></td></tr>
+              </tbody>
+            </table>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <!-- TRANSACTION -->
+    <div class="page" id="page-transaction">
+      <div class="page-header">
+        <div class="page-title">New Transaction</div>
+        <div class="page-sub">Deposit or withdraw from your account</div>
+      </div>
+      <div style="display:grid;grid-template-columns:1fr 1fr;gap:20px;max-width:800px">
+        <div class="card">
+          <div class="section-title" style="margin-bottom:20px">Transaction Details</div>
+          <div style="display:flex;flex-direction:column;gap:16px">
+            <div class="form-group">
+              <label>Transaction Type</label>
+              <div class="radio-group">
+                <div class="radio-opt selected" id="opt-credit" onclick="setMethod('credit')">
+                  <svg width="14" height="14" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 4v16m8-8H4"/></svg>
+                  Credit
+                </div>
+                <div class="radio-opt" id="opt-debit" onclick="setMethod('debit')">
+                  <svg width="14" height="14" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M20 12H4"/></svg>
+                  Debit
+                </div>
+              </div>
+            </div>
+            <div class="form-group">
+              <label>Amount (₹)</label>
+              <input type="number" id="txn-amount" placeholder="0.00" min="1" />
+            </div>
+            <div class="form-group">
+              <label>Account Holder ID</label>
+              <input type="text" id="txn-holder" placeholder="Auto-filled from session" readonly style="opacity:.6" />
+            </div>
+            <button class="btn btn-primary" onclick="doTransaction()" style="justify-content:center;margin-top:4px">
+              <svg width="16" height="16" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M5 13l4 4L19 7"/></svg>
+              Submit Transaction
+            </button>
+          </div>
+        </div>
+        <div class="card" style="background:linear-gradient(135deg,var(--surface2),var(--surface))">
+          <div class="section-title" style="margin-bottom:16px;color:var(--gold)">Balance Info</div>
+          <div style="font-family:'DM Mono',monospace;font-size:36px;font-weight:500;color:var(--text);margin-bottom:6px" id="txn-balance-display">₹0</div>
+          <div style="font-size:13px;color:var(--text-muted)">Available Balance</div>
+          <div class="divider"></div>
+          <div style="font-size:13px;color:var(--text-dim);line-height:1.8">
+            <div>• Credits increase your balance</div>
+            <div>• Debits reduce your balance</div>
+            <div>• A confirmation email is sent after each transaction</div>
+            <div style="margin-top:12px;color:var(--text-muted);font-size:12px">API: POST /transaction</div>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <!-- TRANSFER -->
+    <div class="page" id="page-transfer">
+      <div class="page-header">
+        <div class="page-title">Transfer Funds</div>
+        <div class="page-sub">Send money to another account</div>
+      </div>
+      <div style="max-width:560px">
+        <div class="card">
+          <div class="transfer-toggle">
+            <button class="transfer-toggle-btn active" id="t-direct" onclick="setTransferMode('direct')">Direct Account</button>
+            <button class="transfer-toggle-btn" id="t-ben" onclick="setTransferMode('beneficiary')">Beneficiary</button>
+          </div>
+          <div id="transfer-direct-section">
+            <div class="form-group" style="margin-bottom:14px">
+              <label>Receiver Account Number</label>
+              <input type="number" id="transfer-accno" placeholder="Enter account number" />
+            </div>
+          </div>
+          <div id="transfer-ben-section" style="display:none">
+            <div class="form-group" style="margin-bottom:14px">
+              <label>Select Beneficiary</label>
+              <select id="transfer-ben-select">
+                <option value="">-- Select a beneficiary --</option>
+              </select>
+            </div>
+          </div>
+          <div class="form-group" style="margin-bottom:18px">
+            <label>Amount (₹)</label>
+            <input type="number" id="transfer-amount" placeholder="0.00" min="1" />
+          </div>
+          <div style="background:var(--surface2);border-radius:10px;padding:14px;font-size:13px;color:var(--text-dim);margin-bottom:18px">
+            <div style="display:flex;justify-content:space-between"><span>Available Balance</span><span style="font-family:'DM Mono',monospace;color:var(--gold)" id="transfer-avail">₹0</span></div>
+          </div>
+          <button class="btn btn-primary" onclick="doTransfer()" style="width:100%;justify-content:center">
+            Send Money
+          </button>
+        </div>
+      </div>
+    </div>
+
+    <!-- HISTORY -->
+    <div class="page" id="page-history">
+      <div class="page-header">
+        <div class="page-title">Transaction History</div>
+        <div class="page-sub">Full record of all your transactions</div>
+        <div class="page-actions">
+          <button class="btn btn-outline btn-sm" onclick="downloadStatement()">
+            <svg width="14" height="14" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 10v6m0 0l-3-3m3 3l3-3m2 8H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z"/></svg>
+            Download Statement
+          </button>
+        </div>
+      </div>
+      <div class="card">
+        <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:4px">
+          <div style="font-size:13px;color:var(--text-muted)" id="hist-info">Loading...</div>
+          <div style="display:flex;gap:8px">
+            <select style="width:auto;font-size:12px;padding:7px 10px" onchange="filterHistory(this.value)">
+              <option value="">All</option>
+              <option value="credit">Credit</option>
+              <option value="debit">Debit</option>
+            </select>
+          </div>
+        </div>
+        <div class="table-wrap">
+          <table>
+            <thead>
+              <tr>
+                <th>#</th>
+                <th>Date & Time</th>
+                <th>Account Holder</th>
+                <th>Type</th>
+                <th>Amount</th>
+              </tr>
+            </thead>
+            <tbody id="history-tbody">
+              <tr><td colspan="5"><div class="loading-overlay"><div class="spinner"></div> Loading...</div></td></tr>
+            </tbody>
+          </table>
+        </div>
+        <div class="pagination" id="hist-pagination"></div>
+      </div>
+    </div>
+
+    <!-- BENEFICIARIES -->
+    <div class="page" id="page-beneficiaries">
+      <div class="page-header">
+        <div class="page-title">Beneficiaries</div>
+        <div class="page-sub">Manage your saved payees</div>
+        <div class="page-actions">
+          <button class="btn btn-primary" onclick="openAddBen()">+ Add Beneficiary</button>
+        </div>
+      </div>
+      <div style="max-width:600px;margin-bottom:16px">
+        <div class="card" style="padding:16px 20px;display:flex;align-items:center;gap:12px">
+          <svg width="16" height="16" fill="none" viewBox="0 0 24 24" stroke="var(--text-muted)"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M13 16h-1v-4h-1m1-4h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z"/></svg>
+          <div style="font-size:13px;color:var(--text-dim)">Beneficiaries you save can be quickly selected in the Transfer page.</div>
+        </div>
+      </div>
+      <div id="beneficiary-list" class="beneficiary-list" style="max-width:600px">
+        <div class="loading-overlay"><div class="spinner"></div> Loading...</div>
+      </div>
+    </div>
+
+    <!-- PROFILE -->
+    <div class="page" id="page-profile">
+      <div class="page-header">
+        <div class="page-title">My Profile</div>
+        <div class="page-sub">View and update your account information</div>
+      </div>
+      <div class="profile-section">
+        <div class="profile-card">
+          <div class="profile-header">
+            <div class="profile-avatar" id="profile-avatar">J</div>
+            <div>
+              <div class="profile-name" id="profile-name">—</div>
+              <div class="profile-email" id="profile-email">—</div>
+            </div>
+          </div>
+          <div class="detail-row"><span class="detail-key">Account No</span><span class="detail-val" id="profile-acc">—</span></div>
+          <div class="detail-row"><span class="detail-key">Phone</span><span class="detail-val" id="profile-phone">—</span></div>
+          <div class="detail-row"><span class="detail-key">Role</span><span class="detail-val" id="profile-role">—</span></div>
+          <div class="detail-row"><span class="detail-key">Member Since</span><span class="detail-val" id="profile-joined">—</span></div>
+        </div>
+        <div class="profile-card">
+          <div class="section-title" style="margin-bottom:20px">Update Profile</div>
+          <div style="display:flex;flex-direction:column;gap:14px">
+            <div class="form-group">
+              <label>Full Name</label>
+              <input type="text" id="upd-name" placeholder="John Doe" />
+            </div>
+            <div class="form-group">
+              <label>Email</label>
+              <input type="email" id="upd-email" placeholder="john@example.com" />
+            </div>
+            <div class="form-group">
+              <label>New Password (leave blank to keep)</label>
+              <input type="password" id="upd-pass" placeholder="New password (optional)" />
+            </div>
+            <button class="btn btn-primary" onclick="doUpdateProfile()" style="justify-content:center">Save Changes</button>
+          </div>
+        </div>
+      </div>
+    </div>
+
+  </main>
+</div>
+
+<!-- ADD BENEFICIARY MODAL -->
+<div class="modal-bg" id="add-ben-modal">
+  <div class="modal">
+    <button class="modal-close" onclick="closeModal('add-ben-modal')">✕</button>
+    <div class="modal-title">Add Beneficiary</div>
+    <div style="display:flex;flex-direction:column;gap:14px">
+      <div class="form-group">
+        <label>Beneficiary Name</label>
+        <input type="text" id="ben-name" placeholder="e.g. Mom, Office, Friend" />
+      </div>
+      <div class="form-group">
+        <label>Account Number</label>
+        <input type="number" id="ben-accno" placeholder="Account number" />
+      </div>
+      <button class="btn btn-primary" onclick="doAddBen()" style="justify-content:center;margin-top:4px">Add Beneficiary</button>
+    </div>
+  </div>
+</div>
+
+<!-- TOAST -->
+<div id="toast"></div>
+
+<script>
+// ─────────────────────────────────────────────
+//  CONFIG — change base URL to your backend
+// ─────────────────────────────────────────────
+const API = 'http://localhost:4000';  // ← your Express server URL
+let token = localStorage.getItem('np_token') || '';
+let currentUser = JSON.parse(localStorage.getItem('np_user') || 'null');
+let txnMethod = 'credit';
+let transferMode = 'direct';
+let histPage = 1, histAllData = [];
+let forgotPhone = '';
+
+// ─────────────────────────────────────────────
+//  UTILS
+// ─────────────────────────────────────────────
+function fmt(n){ return '₹' + Number(n).toLocaleString('en-IN',{minimumFractionDigits:0}) }
+function fmtDate(d){ return new Date(d).toLocaleString('en-IN',{day:'2-digit',month:'short',year:'2-digit',hour:'2-digit',minute:'2-digit'}) }
+
+async function api(method, path, body){
+  const opts = {
+    method,
+    headers:{'Content-Type':'application/json'},
+  };
+  if(token) opts.headers['Authorization'] = 'Bearer '+token;
+  if(body) opts.body = JSON.stringify(body);
+  const r = await fetch(API+path, opts);
+  return r.json();
+}
+
+function toast(msg, type='info'){
+  const d = document.createElement('div');
+  d.className = 'toast-msg ' + (type==='error'?'error':type==='success'?'success':'');
+  d.innerHTML = `<span>${type==='success'?'✓':type==='error'?'✕':'ℹ'}</span> ${msg}`;
+  document.getElementById('toast').appendChild(d);
+  setTimeout(()=>d.remove(), 4000);
+}
+
+function openModal(id){ document.getElementById(id).classList.add('open') }
+function closeModal(id){ document.getElementById(id).classList.remove('open') }
+
+// ─────────────────────────────────────────────
+//  AUTH
+// ─────────────────────────────────────────────
+function switchAuth(tab){
+  document.querySelectorAll('.auth-form').forEach(f=>f.classList.remove('active'));
+  document.querySelectorAll('.auth-tab-btn').forEach(b=>b.classList.remove('active'));
+  document.getElementById(tab+'-form').classList.add('active');
+  const tabs = ['login','register','forgot'];
+  document.querySelectorAll('.auth-tab-btn')[tabs.indexOf(tab)].classList.add('active');
+}
+
+async function doLogin(e){
+  debugger;e.preventDefault();
+  const email = document.getElementById('login-email').value;
+  const password = document.getElementById('login-pass').value;
+  try {
+    const r = await api('POST','/users/login',{email, password ,phone:email});
+    if(r.success && r.token){
+      token = r.token;
+      currentUser = r.data;
+      localStorage.setItem('np_token', token);
+      localStorage.setItem('np_user', JSON.stringify(currentUser));
+      initApp();
+    } else {
+      toast(r.error || r.message || 'Login failed', 'error');
+    }
+  } catch(err){ toast('Cannot reach server. Make sure backend is running.','error') }
+}
+
+
+async function doRegister(e){
+  e.preventDefault();
+  const body = {
+    name: document.getElementById('reg-name').value,
+    accountNo: +document.getElementById('reg-acc').value,
+    email: document.getElementById('reg-email').value,
+    phone: +document.getElementById('reg-phone').value,
+    password: document.getElementById('reg-pass').value,
+  };
+  try {
+    const r = await api('POST','/users/post', body);
+    if(r.success){ toast('Account created! Please sign in.','success'); switchAuth('login'); }
+    else toast(r.error || r.message,'error');
+  } catch(err){ toast('Cannot reach server','error') }
+}
+
+async function sendOtp(){
+  forgotPhone = document.getElementById('fp-phone').value;
+  if(!forgotPhone){ toast('Enter phone number','error'); return; }
+  try {
+    const r = await api('POST','/users/forgotpassword',{phone:+forgotPhone});
+    if(r.success){ toast('OTP sent to registered email','success'); document.getElementById('forgot-step1').style.display='none'; document.getElementById('forgot-step2').style.display='block'; }
+    else toast(r.message,'error');
+  } catch{ toast('Cannot reach server','error') }
+}
+
+async function verifyOtp(){
+  const otp = document.getElementById('fp-otp').value;
+  try {
+    const r = await api('POST','/users/verifyotp',{phone:+forgotPhone, otp:+otp});
+    if(r.success){ document.getElementById('forgot-step2').style.display='none'; document.getElementById('forgot-step3').style.display='block'; }
+    else toast(r.message,'error');
+  } catch{ toast('Cannot reach server','error') }
+}
+
+async function resetPass(){
+  const password = document.getElementById('fp-newpass').value;
+  try {
+    const r = await api('POST','/users/resetpassword',{phone:+forgotPhone, password});
+    if(r.success){ toast('Password reset! Please sign in.','success'); switchAuth('login'); }
+    else toast(r.message,'error');
+  } catch{ toast('Cannot reach server','error') }
+}
+
+function logout(){
+  token=''; currentUser=null;
+  localStorage.removeItem('np_token'); localStorage.removeItem('np_user');
+  document.getElementById('app').style.display='none';
+  document.getElementById('auth-screen').style.display='flex';
+}
+
+// ─────────────────────────────────────────────
+//  APP INIT
+// ─────────────────────────────────────────────
+function initApp(){
+  document.getElementById('auth-screen').style.display='none';
+  document.getElementById('app').style.display='flex';
+  if(currentUser){
+    const initials = (currentUser.name||'U').split(' ').map(w=>w[0]).join('').slice(0,2).toUpperCase();
+    document.getElementById('sidebar-avatar').textContent = initials;
+    document.getElementById('sidebar-name').textContent = currentUser.name||'User';
+    document.getElementById('sidebar-role').textContent = currentUser.role||'user';
+    document.getElementById('profile-avatar').textContent = initials;
+    document.getElementById('txn-holder').value = currentUser.id||'';
+
+    const hour = new Date().getHours();
+    const greet = hour<12?'Good morning':hour<18?'Good afternoon':'Good evening';
+    document.getElementById('dash-date').textContent = greet + ', ' + (currentUser.name||'') + ' — here\'s your overview';
+  }
+  loadDashboard();
+  loadBeneficiaries();
+  loadProfile();
+}
+
+// ─────────────────────────────────────────────
+//  NAVIGATION
+// ─────────────────────────────────────────────
+function gotoPage(page){
+  document.querySelectorAll('.page').forEach(p=>p.classList.remove('active'));
+  document.querySelectorAll('.nav-item').forEach(n=>n.classList.remove('active'));
+  document.getElementById('page-'+page).classList.add('active');
+  document.querySelectorAll('.nav-item').forEach(n=>{
+    if(n.textContent.trim().toLowerCase().includes(page)||
+      (page==='transaction'&&n.textContent.includes('Transaction'))||
+      (page==='transfer'&&n.textContent.includes('Transfer'))||
+      (page==='history'&&n.textContent.includes('History'))||
+      (page==='beneficiaries'&&n.textContent.includes('Beneficiar'))||
+      (page==='profile'&&n.textContent.includes('Profile'))||
+      (page==='dashboard'&&n.textContent.includes('Dashboard'))
+    ) n.classList.add('active');
+  });
+  if(page==='history') loadHistory(1);
+  if(page==='dashboard') loadDashboard();
+  if(page==='transfer') loadTransferBalanceAndBens();
+}
+
+// ─────────────────────────────────────────────
+//  DASHBOARD
+// ─────────────────────────────────────────────
+async function loadDashboard(){
+  try {
+    const r = await api('GET','/transaction/alldata?page=1&limit=5');
+    if(r.success){
+      const bal = r.currentBalance||0;
+      document.getElementById('stat-balance').textContent = fmt(bal);
+      document.getElementById('card-balance').textContent = fmt(bal);
+      document.getElementById('stat-count').textContent = r.pagination?.totaltransactions||0;
+      document.getElementById('txn-balance-display').textContent = fmt(bal);
+      document.getElementById('transfer-avail').textContent = fmt(bal);
+
+      // calc credits/debits from data
+      let credits=0, debits=0;
+      (r.result||[]).forEach(t=>{ if(t.method==='credit') credits+=t.transaction; else debits+=t.transaction; });
+      document.getElementById('stat-credits').textContent = fmt(credits);
+      document.getElementById('stat-debits').textContent = fmt(debits);
+
+      if(currentUser){
+        const name = currentUser.name||'—';
+        document.getElementById('card-name').textContent = name;
+        document.getElementById('card-number').textContent = `**** **** **** ${(currentUser.accountNo||'0000').toString().slice(-4)}`;
+      }
+
+      // Recent tbody
+      const tbody = document.getElementById('recent-tbody');
+      const data = r.result||[];
+      if(!data.length){ tbody.innerHTML='<tr><td colspan="3"><div class="empty"><p>No transactions yet</p></div></td></tr>'; return; }
+      tbody.innerHTML = data.map(t=>`
+        <tr>
+          <td style="color:var(--text-dim);font-size:12px">${fmtDate(t.createdAt)}</td>
+          <td><span class="badge badge-${t.method}">${t.method}</span></td>
+          <td class="amount amount-${t.method}">${t.method==='credit'?'+':'-'}${fmt(t.transaction)}</td>
+        </tr>`).join('');
+    }
+  } catch(e){ console.error(e); toast('Dashboard load failed','error') }
+}
+
+// ─────────────────────────────────────────────
+//  TRANSACTION
+// ─────────────────────────────────────────────
+function setMethod(m){
+  txnMethod = m;
+  document.getElementById('opt-credit').classList.toggle('selected', m==='credit');
+  document.getElementById('opt-debit').classList.toggle('selected', m==='debit');
+  document.getElementById('opt-debit').classList.toggle('debit', m==='debit');
+  document.getElementById('opt-credit').classList.remove('debit');
+}
+
+async function doTransaction(){
+  const amount = +document.getElementById('txn-amount').value;
+  if(!amount||amount<=0){ toast('Enter a valid amount','error'); return; }
+  try {
+    const r = await api('POST','/transaction/transaction',{
+      account_Holdername: currentUser.id,
+      transaction: amount,
+      method: txnMethod
+    });
+    if(r.success){
+      toast(`${txnMethod==='credit'?'Credit':'Debit'} of ${fmt(amount)} successful!`,'success');
+      document.getElementById('txn-amount').value='';
+      document.getElementById('txn-balance-display').textContent = fmt(r.currentBalance||0);
+      loadDashboard();
+    } else toast(r.error||r.message,'error');
+  } catch{ toast('Cannot reach server','error') }
+}
+
+// ─────────────────────────────────────────────
+//  HISTORY
+// ─────────────────────────────────────────────
+let histFilter = '';
+function filterHistory(v){ histFilter = v; loadHistory(1); }
+
+async function loadHistory(page=1){
+  histPage = page;
+  document.getElementById('history-tbody').innerHTML = '<tr><td colspan="5"><div class="loading-overlay"><div class="spinner"></div> Loading...</div></td></tr>';
+  try {
+    const r = await api('GET',`/transaction/history?page=${page}&limit=10`);
+    if(r.success){
+      const info = `Page ${page} of ${r.pagination?.totalPages||1} — ${r.pagination?.totalTransactions||0} transactions`;
+      document.getElementById('hist-info').textContent = info;
+      let data = r.transactions||[];
+      if(histFilter) data = data.filter(t=>t.method===histFilter);
+      const tbody = document.getElementById('history-tbody');
+      if(!data.length){ tbody.innerHTML='<tr><td colspan="5"><div class="empty"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="1.5" d="M9 5H7a2 2 0 00-2 2v12a2 2 0 002 2h10a2 2 0 002-2V7a2 2 0 00-2-2h-2M9 5a2 2 0 002 2h2a2 2 0 002-2M9 5a2 2 0 012-2h2a2 2 0 012 2"/></svg><p>No transactions found</p></div></td></tr>'; return; }
+      tbody.innerHTML = data.map((t,i)=>{
+        const holder = Array.isArray(t.account_Holdername) ? (t.account_Holdername[0]?.name||'—') : (t.account_Holdername?.name||currentUser?.name||'—');
+        return `<tr>
+          <td style="color:var(--text-muted);font-family:'DM Mono',monospace;font-size:12px">${(page-1)*10+i+1}</td>
+          <td style="font-size:12px;color:var(--text-dim)">${fmtDate(t.createdAt)}</td>
+          <td style="font-size:13px">${holder}</td>
+          <td><span class="badge badge-${t.method}">${t.method}</span></td>
+          <td class="amount amount-${t.method}">${t.method==='credit'?'+':'-'}${fmt(t.transaction)}</td>
+        </tr>`;
+      }).join('');
+      renderPagination('hist-pagination', page, r.pagination?.totalPages||1, loadHistory);
+    }
+  } catch{ toast('Cannot reach server','error') }
+}
+
+function renderPagination(id, current, total, cb){
+  const el = document.getElementById(id);
+  if(total<=1){ el.innerHTML=''; return; }
+  let html = '';
+  if(current>1) html += `<button class="page-btn" onclick="${cb.name}(${current-1})">‹</button>`;
+  for(let i=1;i<=Math.min(total,7);i++){
+    if(total>7 && i>3 && i<total-1 && Math.abs(i-current)>1){ if(html.slice(-3)!='...') html+='<span class="page-info">…</span>'; continue; }
+    html += `<button class="page-btn${i===current?' active':''}" onclick="${cb.name}(${i})">${i}</button>`;
+  }
+  if(current<total) html += `<button class="page-btn" onclick="${cb.name}(${current+1})">›</button>`;
+  el.innerHTML = html;
+}
+
+// ─────────────────────────────────────────────
+//  DOWNLOAD STATEMENT
+// ─────────────────────────────────────────────
+async function downloadStatement(){
+  try {
+    const r = await fetch(API+'/transaction/statement',{headers:{'Authorization':'Bearer '+token}});
+    if(!r.ok){ toast('No transactions found','error'); return; }
+    const blob = await r.blob();
+    const url = URL.createObjectURL(blob);
+    const a = document.createElement('a'); a.href=url; a.download='statement.csv'; a.click();
+    toast('Statement downloaded','success');
+  } catch{ toast('Cannot reach server','error') }
+}
+
+// ─────────────────────────────────────────────
+//  TRANSFER
+// ─────────────────────────────────────────────
+function setTransferMode(mode){
+  transferMode = mode;
+  document.getElementById('t-direct').classList.toggle('active', mode==='direct');
+  document.getElementById('t-ben').classList.toggle('active', mode==='beneficiary');
+  document.getElementById('transfer-direct-section').style.display = mode==='direct'?'block':'none';
+  document.getElementById('transfer-ben-section').style.display = mode==='beneficiary'?'block':'none';
+}
+
+async function loadTransferBalanceAndBens(){
+  try {
+    const r = await api('GET','/transaction/alldata?page=1&limit=1');
+    if(r.success) document.getElementById('transfer-avail').textContent = fmt(r.currentBalance||0);
+  } catch{}
+  // populate beneficiary dropdown
+  try {
+    const bens = JSON.parse(localStorage.getItem('np_bens')||'[]');
+    const sel = document.getElementById('transfer-ben-select');
+    sel.innerHTML = '<option value="">-- Select a beneficiary --</option>' +
+      bens.map(b=>`<option value="${b._id}">${b.beneficiaryName} (${b.accountNo})</option>`).join('');
+  } catch{}
+}
+
+async function doTransfer(){
+  const amount = +document.getElementById('transfer-amount').value;
+  if(!amount||amount<=0){ toast('Enter a valid amount','error'); return; }
+  const body = { amount };
+  if(transferMode==='direct'){
+    const acc = +document.getElementById('transfer-accno').value;
+    if(!acc){ toast('Enter receiver account number','error'); return; }
+    body.receiverAccountNo = acc;
+  } else {
+    const benId = document.getElementById('transfer-ben-select').value;
+    if(!benId){ toast('Select a beneficiary','error'); return; }
+    body.beneficiaryId = benId;
+  }
+  try {
+    const r = await api('POST','/transaction/transfer', body);
+    if(r.success){
+      toast(`Transfer of ${fmt(amount)} successful!`,'success');
+      document.getElementById('transfer-amount').value='';
+      document.getElementById('transfer-avail').textContent = fmt(r.currentBalance||0);
+      loadDashboard();
+    } else toast(r.error||r.message,'error');
+  } catch{ toast('Cannot reach server','error') }
+}
+
+// ─────────────────────────────────────────────
+//  BENEFICIARIES
+// ─────────────────────────────────────────────
+async function loadBeneficiaries(){
+  // The API doesn't expose a list endpoint, so we cache locally
+  const bens = JSON.parse(localStorage.getItem('np_bens')||'[]');
+  renderBenList(bens);
+}
+
+function renderBenList(bens){
+  const el = document.getElementById('beneficiary-list');
+  if(!bens.length){ el.innerHTML='<div class="empty"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="1.5" d="M17 20h5v-2a3 3 0 00-5.356-1.857M17 20H7m10 0v-2c0-.656-.126-1.283-.356-1.857M7 20H2v-2a3 3 0 015.356-1.857M7 20v-2c0-.656.126-1.283.356-1.857m0 0a5.002 5.002 0 019.288 0M15 7a3 3 0 11-6 0 3 3 0 016 0z"/></svg><p>No beneficiaries added yet</p></div>'; return; }
+  el.innerHTML = bens.map((b,i)=>{
+    const initials = (b.beneficiaryName||'B').split(' ').map(w=>w[0]).join('').slice(0,2).toUpperCase();
+    return `<div class="beneficiary-item">
+      <div class="avatar" style="width:40px;height:40px">${initials}</div>
+      <div class="ben-info">
+        <div class="ben-name">${b.beneficiaryName||'—'}</div>
+        <div class="ben-acc">${(''+b.accountNo).replace(/(\d{4})/g,'$1 ').trim()}</div>
+      </div>
+      <button class="btn btn-outline btn-sm" onclick="removeBen(${i})">Remove</button>
+    </div>`;
+  }).join('');
+}
+
+function openAddBen(){ openModal('add-ben-modal'); }
+
+async function doAddBen(){
+  const name = document.getElementById('ben-name').value;
+  const accno = +document.getElementById('ben-accno').value;
+  if(!name||!accno){ toast('Fill all fields','error'); return; }
+  try {
+    const r = await api('POST','/transaction/add-beneficiary',{name, accountNo:accno});
+    if(r.success){
+      const bens = JSON.parse(localStorage.getItem('np_bens')||'[]');
+      bens.push(r.data||{_id:Date.now(),beneficiaryName:name,accountNo:accno});
+      localStorage.setItem('np_bens', JSON.stringify(bens));
+      renderBenList(bens);
+      closeModal('add-ben-modal');
+      document.getElementById('ben-name').value='';
+      document.getElementById('ben-accno').value='';
+      toast('Beneficiary added!','success');
+    } else toast(r.error||r.message,'error');
+  } catch{ toast('Cannot reach server','error') }
+}
+
+function removeBen(idx){
+  const bens = JSON.parse(localStorage.getItem('np_bens')||'[]');
+  bens.splice(idx,1);
+  localStorage.setItem('np_bens', JSON.stringify(bens));
+  renderBenList(bens);
+  toast('Beneficiary removed','info');
+}
+
+// ─────────────────────────────────────────────
+//  PROFILE
+// ─────────────────────────────────────────────
+async function loadProfile(){
+  if(!currentUser) return;
+  document.getElementById('profile-name').textContent = currentUser.name||'—';
+  document.getElementById('profile-email').textContent = currentUser.email||'—';
+  document.getElementById('upd-name').value = currentUser.name||'';
+  document.getElementById('upd-email').value = currentUser.email||'';
+
+  // Try to load full profile
+  try {
+    const r = await api('GET','/users/getusers');
+    if(r.success && r.data){
+      const me = r.data.find(u=>u._id===currentUser.id || u.email===currentUser.email);
+      if(me){
+        document.getElementById('profile-acc').textContent = me.accountNo||'—';
+        document.getElementById('profile-phone').textContent = me.phone||'—';
+        document.getElementById('profile-role').textContent = me.role||'user';
+        document.getElementById('profile-joined').textContent = me.createdAt ? new Date(me.createdAt).toLocaleDateString('en-IN',{year:'numeric',month:'long',day:'numeric'}) : '—';
+      }
+    }
+  } catch{}
+}
+
+async function doUpdateProfile(){
+  const body = {};
+  const name = document.getElementById('upd-name').value;
+  const email = document.getElementById('upd-email').value;
+  const pass = document.getElementById('upd-pass').value;
+  if(name) body.name = name;
+  if(email) body.email = email;
+  if(pass) body.password = pass;
+  try {
+    const r = await api('PATCH',`/users/${currentUser.id}`, body);
+    if(r.success){
+      toast('Profile updated!','success');
+      if(name) currentUser.name = name;
+      if(email) currentUser.email = email;
+      localStorage.setItem('np_user', JSON.stringify(currentUser));
+      document.getElementById('sidebar-name').textContent = currentUser.name;
+      document.getElementById('profile-name').textContent = currentUser.name;
+      document.getElementById('upd-pass').value='';
+    } else toast(r.error||r.message,'error');
+  } catch{ toast('Cannot reach server','error') }
+}
+
+// ─────────────────────────────────────────────
+//  STARTUP
+// ─────────────────────────────────────────────
+(function(){
+  if(token && currentUser){
+    initApp();
+  } else {
+    document.getElementById('auth-screen').style.display='flex';
+    document.getElementById('app').style.display='none';
+  }
+})();
+</script>
+</body>
+</html>
