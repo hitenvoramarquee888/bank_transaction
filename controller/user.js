@@ -3,6 +3,8 @@ const bcrypt = require("bcrypt");
 const jwt = require("jsonwebtoken");
 const sendMail = require("../utils/sendmail");
 
+
+
 exports.register = async (req, res) => {
   try {
     let passdata = req.body;
@@ -42,6 +44,7 @@ exports.register = async (req, res) => {
     }
 
     const salt = await bcrypt.genSalt(10);
+    passdata.image = req.file.filename;
     passdata.password = await bcrypt.hash(passdata.password, salt);
     const data = await user.create(passdata);
     await sendMail(
@@ -190,6 +193,7 @@ exports.login = async (req, res) => {
       { id: emailVerify._id },
       process.env.JWT_SECRET,
       { expiresIn: "1d" },
+      
     );
 
     res.status(200).json({

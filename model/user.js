@@ -5,11 +5,16 @@ const userSchema = new mongoose.Schema({
         required : [true,"Please provide a name"],
         trim : true,
     },
+    
         accountNo : {
         type: Number,
         required: [true, "please enter your account Number"],
         unique : [true, "Account number already exists"],
     
+    },
+    image : {
+        type : String,
+        required : [true,"Please provide an image"],
     },
     email: {
         type : String,
