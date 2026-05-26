@@ -828,7 +828,7 @@ function gotoPage(page){
 // ─────────────────────────────────────────────
 async function loadDashboard(){
   try {
-    const r = await api('GET','/transaction/alldata?page=1&limit=5');
+    const r = await api('GET','/transaction/alldata?page=1&limit=10');
     if(r.success){
       const bal = r.currentBalance||0;
       document.getElementById('stat-balance').textContent = fmt(bal);
@@ -903,6 +903,7 @@ async function loadHistory(page=1){
   document.getElementById('history-tbody').innerHTML = '<tr><td colspan="5"><div class="loading-overlay"><div class="spinner"></div> Loading...</div></td></tr>';
   try {
     const r = await api('GET',`/transaction/history?page=${page}&limit=10`);
+    console.log(r);
     if(r.success){
       const info = `Page ${page} of ${r.pagination?.totalPages||1} — ${r.pagination?.totalTransactions||0} transactions`;
       document.getElementById('hist-info').textContent = info;

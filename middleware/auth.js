@@ -4,8 +4,8 @@ const jwt = require('jsonwebtoken')
 module.exports.authcheck = async (req, res, next) => {
     try {
 
-        const token = req.headers.authorization
-        console.log(token);
+        const token = req.headers.authorization?req.headers.authorization.split(" ")[1] : null
+        
         if (!token) throw new Error('attach token')
 
         const tokenVerify = jwt.verify(token, process.env.JWT_SECRET)
@@ -19,7 +19,7 @@ module.exports.authcheck = async (req, res, next) => {
         next()
 
 
-    } catch(error) {
+    } catch(error){
         res.status(500).json({
             status: 'fail',
             message: error.message

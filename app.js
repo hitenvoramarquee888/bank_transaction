@@ -35,6 +35,22 @@ app.use(cors());
 // app,use(sockets())
 app.use(express.urlencoded({ extended: false }));
 app.use(cookieParser());
+
+// app.post('/login', (req, res) => {
+//   const token = "your_jwt_token_here";
+
+//   // Set the cookie
+//   res.cookie('token', token, {
+//     httpOnly: true,    // Blocks JavaScript access (prevents XSS)
+//     secure: true,      // Requires HTTPS (set to false only in development)
+//     sameSite: 'lax',   // Protects against CSRF
+//     maxAge: 3600000    // Cookie expiration time in milliseconds (1 hour)
+//   });
+
+//   res.send({ success: true, message: "Logged in successfully!" });
+// });
+
+
 app.use(express.static(path.join(__dirname, 'public')));
 
 // app.use('/', indexRouter);
