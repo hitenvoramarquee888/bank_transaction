@@ -243,7 +243,7 @@ const result = await transaction.aggregate([
     const totalBalance =
       balanceData.length > 0 ? balanceData[0].totalBalance : 0;
 
-    res.status(200).json({
+      res.status(200).json({
       success: true,
 
       currentBalance: totalBalance,

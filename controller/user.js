@@ -94,35 +94,35 @@ exports.updateProfile = async (req, res) => {
 
       if (password.length < 8) {
         return res.status(400).json({
-          status: "fail",
+          status: 'fail',
           message: "Password must be at least 8 characters"
         });
       }
 
       if (!/[A-Z]/.test(password)) {
         return res.status(400).json({
-          status: "fail",
+          status: 'fail',
           message: "Password must contain uppercase letter"
         });
       }
 
       if (!/[a-z]/.test(password)) {
         return res.status(400).json({
-          status: "fail",
+          status: 'fail',
           message: "Password must contain lowercase letter"
         });
       }
 
       if (!/[0-9]/.test(password)) {
         return res.status(400).json({
-          status: "fail",
+          status: 'fail',
           message: "Password must contain a number"
         });
       }
 
       if (!/[!@#$%^&*]/.test(password)) {
         return res.status(400).json({
-          status: "fail",
+          status: 'fail',
           message: "Password must contain special character"
         });
       }

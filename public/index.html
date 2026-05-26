@@ -683,6 +683,7 @@ async function api(method, path, body){
   if(token) opts.headers['Authorization'] = 'Bearer '+token;
   if(body) opts.body = JSON.stringify(body);
   const r = await fetch(API+path, opts);
+
   return r.json();
 }
 
@@ -902,7 +903,8 @@ async function loadHistory(page=1){
   histPage = page;
   document.getElementById('history-tbody').innerHTML = '<tr><td colspan="5"><div class="loading-overlay"><div class="spinner"></div> Loading...</div></td></tr>';
   try {
-    const r = await api('GET',`/transaction/history?page=${page}&limit=10`);
+
+    const r = await api('GET',`/transaction/history/:${currentUser.id}?page=${page}&limit=10`);
     console.log(r);
     if(r.success){
       const info = `Page ${page} of ${r.pagination?.totalPages||1} — ${r.pagination?.totalTransactions||0} transactions`;
